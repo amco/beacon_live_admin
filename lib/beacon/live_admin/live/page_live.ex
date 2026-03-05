@@ -26,6 +26,7 @@ defmodule Beacon.LiveAdmin.PageLive do
         """
 
     page = lookup_page!(socket, current_url)
+    pages = Enum.filter(pages, &show_page_link?(&1, session, site))
 
     assign_mount(socket, site, page, sites, pages, params)
   end
@@ -274,5 +275,17 @@ defmodule Beacon.LiveAdmin.PageLive do
     <span :if={@icon} aria-hidden="true" class={@icon <> " aspect-square h-7 @[180px]:h-4.5 w-7 @[180px]:w-4.5 @[350px]:h-7 @[350px]:w-7"}></span>
     <span class=""><%= @text %></span>
     """
+  end
+
+  defp show_page_link?(page, session, site) do
+    Beacon.Config.fetch!(site)
+    |> Map.get(:authorization_policy)
+    |> case do
+      nil ->
+        true
+
+      auth_module ->
+        auth_module.show_page?(page, session)
+    end
   end
 end
